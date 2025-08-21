@@ -11,7 +11,7 @@ const product: Product = {
   thumbnail: "./images/image-product-1-thumbnail.jpg", // default
 };
 
-// Product thumbnails
+// --- DOM elements ---
 const mainProductImage = document.getElementById(
   "mainImage",
 ) as HTMLImageElement;
@@ -19,26 +19,6 @@ const productThumbnailImages = document.querySelectorAll(
   ".thumbnail",
 ) as NodeListOf<HTMLImageElement>;
 
-productThumbnailImages.forEach((thumb) => {
-  thumb.addEventListener("click", () => {
-    const fullImageSrc = thumb.src.replace("-thumbnail", "");
-    mainProductImage.src = fullImageSrc;
-
-    // ✅ Update product.thumbnail dynamically
-    product.thumbnail = thumb.src;
-
-    // Reset styles
-    productThumbnailImages.forEach((t) => {
-      t.style.border = "none";
-      t.style.opacity = "1";
-    });
-
-    thumb.style.border = "2px solid orange";
-    thumb.style.opacity = "0.5";
-  });
-});
-
-// --- DOM elements ---
 const decreaseBtn = document.getElementById("decreaseBtn") as HTMLButtonElement;
 const increaseBtn = document.getElementById("increaseBtn") as HTMLButtonElement;
 const quantityDisplay = document.getElementById(
@@ -55,22 +35,25 @@ const checkoutContainer = document.getElementById(
   "checkoutContainer",
 ) as HTMLDivElement;
 
-const menuBtn = document.getElementById("menuBtn") as HTMLButtonElement;
-const mobileMenu = document.getElementById("mobileMenu") as HTMLUListElement;
-
-menuBtn.addEventListener("click", () => {
-  mobileMenu.classList.toggle("hidden"); // Show/Hide menu
-});
-
-const closeMenuBtn = document.getElementById("closeMenuBtn");
-
-closeMenuBtn.addEventListener("click", () => {
-  mobileMenu.classList.add("hidden");
-});
+const prevBtn = document.getElementById("prevBtn") as HTMLButtonElement;
+const nextBtn = document.getElementById("nextBtn") as HTMLButtonElement;
 
 // --- State ---
-let quantity = 0; // user selected
-let cartQuantity = 0; // in cart
+let quantity = 0;
+let cartQuantity = 0;
+let currentIndex = 0;
+
+const images = [
+  "./images/image-product-1.jpg",
+  "./images/image-product-2.jpg",
+  "./images/image-product-3.jpg",
+  "./images/image-product-4.jpg",
+];
+
+// --- Helper: update thumbnail path ---
+function getThumbnailPath(fullImage: string): string {
+  return fullImage.replace(".jpg", "-thumbnail.jpg");
+}
 
 // --- Quantity buttons ---
 increaseBtn.addEventListener("click", () => {
@@ -137,10 +120,50 @@ function renderCart() {
 // --- Add to cart ---
 addToCartBtn?.addEventListener("click", () => {
   if (quantity > 0) {
+    // ✅ Always use current main image for thumbnail
+    product.thumbnail = getThumbnailPath(mainProductImage.src);
     cartQuantity = quantity;
     renderCart();
   }
 });
 
-// Initial render
+// --- Slider Controls ---
+function updateImage(index: number) {
+  currentIndex = index;
+  mainProductImage.src = images[currentIndex];
+}
+
+prevBtn.addEventListener("click", () => {
+  currentIndex = (currentIndex - 1 + images.length) % images.length;
+  updateImage(currentIndex);
+});
+
+nextBtn.addEventListener("click", () => {
+  currentIndex = (currentIndex + 1) % images.length;
+  updateImage(currentIndex);
+});
+
+// --- Thumbnails ---
+productThumbnailImages.forEach((thumb, index) => {
+  thumb.addEventListener("click", () => {
+    const fullImageSrc = thumb.src.replace("-thumbnail", "");
+    mainProductImage.src = fullImageSrc;
+
+    // ✅ Update product thumbnail dynamically
+    product.thumbnail = thumb.src;
+
+    // Reset styles
+    productThumbnailImages.forEach((t) => {
+      t.style.border = "none";
+      t.style.opacity = "1";
+    });
+
+    thumb.style.border = "2px solid orange";
+    thumb.style.opacity = "0.5";
+
+    currentIndex = index;
+  });
+});
+
+// --- Initial render ---
 renderCart();
